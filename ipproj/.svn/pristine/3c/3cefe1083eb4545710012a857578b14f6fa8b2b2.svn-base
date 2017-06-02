@@ -1,0 +1,97 @@
+# -*- coding: utf-8 -*-
+import scrapy
+from ipproj.items import IpprojItem
+from ipproj import pipelines
+import sys,urllib
+from scrapy.selector import Selector
+# from ipproj.spiders.dateutil import dateutil
+import random
+import math
+
+class Spider2Spider(scrapy.Spider):
+    name = "spider2"
+    allowed_domains = ["epub.sipo.gov.cn/patentoutline.action"]
+
+
+    date = ""
+    pageNumber = 0
+    ptype = "fmsq"
+
+    def __init__(self, date):
+        self.date = date
+        self.pageNumber = 7474
+
+    pipeline = set([
+    	# pipelines.JsonPipeline2,
+        pipelines.MongoDBFmsqPipeline,
+    ])
+
+    def start_requests(self):
+        # util = dateutil()
+        # dateList = util.getAllWed()
+        # for index,d in enumerate(dateList):
+        #     dateList[index] = "公开（公告）日="+d
+        # for d in dateList:
+        #     print d
+        self.date = "公开（公告）日=2016.06.22"
+        for i in xrange(1, int(math.ceil(self.pageNumber/3))):
+            # get list of patent page by page
+            start = random.randrange(1, int(math.ceil(self.pageNumber/3)))
+            for j in xrange(0, 10):
+                yield scrapy.FormRequest("http://epub.sipo.gov.cn/patentoutline.action",
+                    formdata={'showType': '1', 'strWord': self.date, 'numSortMethod':'5', 'strLicenseCode':'', 'selected':self.ptype,
+                    'pageSize':'3', 'pageNow':str(start+j)},
+                    meta={'type': self.ptype},
+                    callback=self.post_over)
+        pass
+
+    def post_over(self, response):
+        items = []
+        hxs = Selector(response)
+        pathents = hxs.xpath('//div[@class="cp_box"]')
+        for box in pathents:
+            print 'entering a patent'
+            item = IpprojItem()
+            item['type'] = response.meta.get('type', None)
+            item['title'] = box.xpath('div[@class="cp_linr"]/h1[1]/text()').extract()[0].replace(u'\r\n\t\t\t\t[发明授权] ','')#
+            # authId    授权号
+            item['authId'] = box.xpath('''div[@class="cp_linr"]/ul/li[@class="wl228"][1]/text()''').extract()[0].replace(u'授权公告号：','')# 授权公告号
+            # authDate  授权日
+            item['authDate'] = box.xpath('div[@class="cp_linr"]/ul/li[@class="wl228"][2]/text()').extract()[0].replace(u'授权公告日：','')# 授权公告日：
+            # appId     申请号
+            item['appId'] = box.xpath('div[@class="cp_linr"]/ul/li[@class="wl228"][3]/text()').extract()[0].replace(u'申请号：','')
+            # appDate   申请日
+            item['appDate'] = box.xpath('div[@class="cp_linr"]/ul/li[@class="wl228"][4]/text()').extract()[0].replace(u'申请日：','')
+            # appOwner  申请人
+            item['appOwner'] = box.xpath('div[@class="cp_linr"]/ul/li[@class="wl228"][5]/text()').extract()[0].replace(u'专利权人：','')# 专利权人：
+            owner2 = box.xpath('div[@class="cp_linr"]/ul/li[@class="wl228"][5]/div[@style="display:none;"]/text()').extract()
+            if (owner2):
+                item['appOwner2'] = owner2[0]
+            # inventor  发明人 可能有多个
+            item['inventor'] = box.xpath('div[@class="cp_linr"]/ul/li[@class="wl228"][6]/text()').extract()[0].replace(u'发明人：','')
+            inventors2 = box.xpath('div[@class="cp_linr"]/ul/li[@class="wl228"][6]/div[@style="display:none;"]/text()').extract()
+            if len(inventors2)>0:
+                item['inventor2'] = inventors2[0]
+            # address   地址
+            item['address'] = box.xpath('div[@class="cp_linr"]/ul/li[8]/text()').extract()[0].replace(u'地址：','')
+            # catId     分类号
+            item['catId'] = box.xpath('div[@class="cp_linr"]/ul/li[9]/text()').extract()[0].replace(u'分类号：','')
+            # 还有分类号，代理机构名称等等
+            otherDetail = box.xpath('div[@class="cp_linr"]/ul/li[9]/div[@style="display:none;"]/ul/li/text()').extract();
+            item['otherDetail'] = otherDetail
+            # abstract  摘要
+            abstracts = box.xpath('div[@class="cp_linr"]/div[@class="cp_jsh"][1]/text()').extract()[1]
+            abstracts2 = box.xpath('div[@class="cp_linr"]/div[@class="cp_jsh"]/span[@style="display:none;"]/text()').extract()
+            item['abstract'] = abstracts
+            if len(abstracts2)>0:
+                item['abstract'] = abstracts.replace('\r\n\t\t\t\t','') + abstracts2[0]
+            else:
+                item['abstract'] = abstracts.replace('\r\n\t\t\t\t','')
+
+            # yield scrapy.FormRequest("http://epub.sipo.gov.cn/dxb.action", 
+            #   formdata={'strSources': 'fmmost', 'strWhere': data, 'recordCursor':'0', 'strLicenseCode': ''}, 
+            #   meta={'item': item},
+            #   callback = self.post_detail)
+            items.append(item)
+        return items
+

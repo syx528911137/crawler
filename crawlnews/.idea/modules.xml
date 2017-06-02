@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="ProjectModuleManager">
+    <modules>
+      <module fileurl="file://$PROJECT_DIR$/../crawlIP/.idea/crawlIP.iml" filepath="$PROJECT_DIR$/../crawlIP/.idea/crawlIP.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../crawlPaper/.idea/crawlPaper.iml" filepath="$PROJECT_DIR$/../crawlPaper/.idea/crawlPaper.iml" />
+      <module fileurl="file://$PROJECT_DIR$/.idea/crawlnews.iml" filepath="$PROJECT_DIR$/.idea/crawlnews.iml" />
+      <module fileurl="file://$PROJECT_DIR$/../ipproj/.idea/ipproj.iml" filepath="$PROJECT_DIR$/../ipproj/.idea/ipproj.iml" />
+      <module fileurl="file://$USER_HOME$/PycharmProjects/patents/.idea/patents.iml" filepath="$USER_HOME$/PycharmProjects/patents/.idea/patents.iml" />
+    </modules>
+  </component>
+</project>

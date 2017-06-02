@@ -1,0 +1,16 @@
+<!doctype html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>404页面</title>
+</head>
+<body>
+<div style="text-align:center;">
+<img src="404.jpg">
+<p>对不起，你访问的页面暂时无法找到或者已经删除</p>
+<p><a href="http://www.ittime.com.cn/">访问首页</a></p>
+</div>
+
+</body>
+</html>
